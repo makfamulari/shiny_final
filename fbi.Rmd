@@ -1,0 +1,34 @@
+---
+title: "FBI"
+
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(janitor)
+library(readxl)
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(gt)
+```
+
+```{r echo = FALSE, include = FALSE}
+
+FBI2010 <- read_csv("FBI Top Ten Most Wanted  - Sheet1.csv") %>% 
+  clean_names() 
+
+FBI2000 <- read_csv("FBI_2000 - Sheet1.csv") %>% 
+  clean_names()
+
+file.copy("FBI_2000 - Sheet1.csv", "final_project")
+file.copy("FBI Top Ten Most Wanted  - Sheet1.csv", "final_project")
+```
+
+```{r echo = FALSE}
+
+
+```
+
