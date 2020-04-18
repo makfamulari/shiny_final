@@ -10,11 +10,9 @@
 library(shiny)
 library(shinythemes)
 
-FBI2010 <- read_csv("FBI Top Ten Most Wanted  - Sheet1.csv") %>% 
+FBI <- read_csv("FBI Top Ten Most Wanted_Fixed - Sheet1.csv") %>% 
   clean_names() 
 
-FBI2000 <- read_csv("FBI_2000 - Sheet1.csv") %>% 
-  clean_names()
 
 # Define UI for application that draws a histogram
 ui <- navbarPage(theme = shinytheme("sandstone"),
@@ -45,19 +43,22 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                                    crimes, and their victims. The list's members beginning in the year 2010 will be
                                    studied: their lives, crimes, and backgrounds."),
                                  h1("Data"),
-                                 p("Information about data"))),
-                 tabPanel("The Crimes"),
+                                 p("There are no current existing databases aggregating information on members of the 
+                                   FBI's Most Wanted List. Data scrubbing was conducted by myself using information from
+                                   the FBI's archived most wanted lists. These lists contained information on dates of placement, 
+                                   dates of removal, and biographical information such as race, gender, and nationality). For a significant 
+                                   number of past criminals, the nature of crimes/profiles were not available through the FBI. To determine 
+                                   the reasons for placement (including suspected charges
+                                   and convicted charges, if apprehended), archived court files were utilized. Given the fact that
+                                   many of the criminals had lengthy criminal records, only the two most significant charges were considered
+                                   for each criminal."))),
+                 tabPanel("The Crimes", 
+                 h1("What crimes end up on the list?"),
+                        p("The following chart lists the occurance of crimes on the FBI's Most Wanted Lists 
+                          for the years 2000-2020."),
+                 mainPanel(plotOutput("crime_breakdown"))),
                  tabPanel("The Criminals"),
-                 tabPanel("Efficacy of FBI's List from 2010-2020",
-                 h3("How do crimes differ across gender?"),
-                 sidebarPanel(
-                   span(),
-                   selectInput("gender", "Gender",
-                               choices = list("Male" = "male",
-                                              "Female" = "female"),
-                               selected = "male")),
-                 
-                 mainPanel(plotOutput("pie_chart"))),
+                 tabPanel("Efficacy of FBI's List from 2000-2020"),
                  tabPanel("Gang Related Crimes"),
                  tabPanel("Notable Cases"),
                  tabPanel("Contact",
@@ -70,20 +71,35 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
    
-   output$pie_chart <- renderPlot({
-       pie_chart_gender <- FBI2010 %>% 
-         group_by(reason_for_removal) %>% 
-         count()
+   output$crime_breakdown <- renderPlot({
+       crime <- FBI %>% 
+         select(-name,
+                -placed_on_list,
+                - removed_from_list,
+                - reason_for_removal,
+                - race,
+                - gender,
+                - nationality,
+                - gang_related,
+                - police_victim) %>% 
+         pivot_longer(everything(),
+                      names_to = "crime",
+                      values_to = "count") %>% 
+         filter(count == 1) %>% 
+         select(crime) %>% 
+         count(crime) %>% 
+         filter(n > 1)
        
-       ggplot(pie_chart_gender, aes(x = reason_for_removal, y = n, fill = reason_for_removal)) +
+       ggplot(crime, aes(x = crime, y = n, fill = crime)) +
          geom_col(stat = "identity") +
          labs(
-           title = "Reasons for Removal from FBI's Top Ten List",
-           fill = "Reason",
-           x = "Reason",
-           y = "Count"
+           title = "Frequency of Crimes on the List (2000-2020)",
+           fill = "Type of Crime",
+           x = "Crime",
+           y = "Count",
+           caption = "*Excluding crimes that appeared on the list only once."
          ) +
-         theme_classic()
+         theme_dark()
        
      })
 }

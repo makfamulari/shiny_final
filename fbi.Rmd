@@ -17,18 +17,34 @@ library(gt)
 
 ```{r echo = FALSE, include = FALSE}
 
-FBI2010 <- read_csv("FBI Top Ten Most Wanted  - Sheet1.csv") %>% 
-  clean_names() 
+FBI <- read_csv("FBI Top Ten Most Wanted_Fixed - Sheet1.csv") %>% 
+  clean_names() %>% 
+  mutate_all(funs(replace_na(., 0))) %>% 
+  mutate_if(is.numeric, funs(replace_na(., 0)))
 
-FBI2000 <- read_csv("FBI_2000 - Sheet1.csv") %>% 
-  clean_names()
-
-file.copy("FBI_2000 - Sheet1.csv", "final_project")
-file.copy("FBI Top Ten Most Wanted  - Sheet1.csv", "final_project")
+file.copy("FBI Top Ten Most Wanted_Fixed - Sheet1.csv", "final_project")
 ```
 
-```{r echo = FALSE}
+```{r crime_data, echo = FALSE}
 
+crime <- FBI %>% 
+  select(-name,
+         -placed_on_list,
+         - removed_from_list,
+         - reason_for_removal,
+         - race,
+         - gender,
+         - nationality,
+         - gang_related,
+         - police_victim) %>% 
+  pivot_longer(everything(),
+               names_to = "crime",
+               values_to = "count") %>% 
+  filter(count == 1) %>% 
+  select(crime) %>% 
+  count(crime)
+
+crime
 
 ```
 
