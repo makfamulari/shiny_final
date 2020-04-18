@@ -45,6 +45,21 @@ crime <- FBI %>%
   count(crime)
 
 crime
-
 ```
+
+
+```{r crime_year, echo = FALSE}
+pie_chart <- FBI %>% 
+filter(! race == 0) %>% 
+       group_by(race) %>% 
+       count()  %>% 
+       mutate(prop = (n)/(sum(n))) 
+
+pie_chart %>% 
+ggplot(aes(x = "", y = n, fill = race))+
+       geom_bar(width = 1, stat = "identity") +
+       coord_polar("y", start=0) + 
+       theme_void() 
+```
+
 

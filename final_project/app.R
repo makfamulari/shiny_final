@@ -57,7 +57,13 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                         p("The following chart lists the occurance of crimes on the FBI's Most Wanted Lists 
                           for the years 2000-2020."),
                  mainPanel(plotOutput("crime_breakdown"))),
-                 tabPanel("The Criminals"),
+                 tabPanel("The Criminals",
+                 selectInput("demographics", tags$b("Choose a demographic characteristic:"),
+                             choices = c("Race" = "race", 
+                                         "Gender" = "gender",
+                                         "Nationality" = "nationality")),
+                 mainPanel(
+                   plotOutput("distPlot"))),
                  tabPanel("Efficacy of FBI's List from 2000-2020"),
                  tabPanel("Gang Related Crimes"),
                  tabPanel("Notable Cases"),
@@ -102,7 +108,36 @@ server <- function(input, output, session) {
          theme_dark()
        
      })
+   
+   output$distPlot <- renderPlot({
+     new_title <- if(input$demographics == "race"){
+       print("Race")
+     } else if(input$demographics == "nationality"){
+       print("Nationality")
+     } else if(input$demographics == "gender"){
+       print("Gender")
+     } 
+     
+     pie_chart <- FBI %>% 
+       filter(! input$demographics == 0) %>% 
+       group_by(input$demographics) %>% 
+       count() %>% 
+       mutate(prop = (n)/(sum(n))) 
+     
+     pie_chart %>% 
+       ggplot(aes(x = "", y = n, fill = input$demographics)) +
+       geom_bar(stat = "identity") +
+       coord_polar("y", start = 0) + 
+       labs(title = paste("Breakdown of Criminals by ", new_title, sep = ""),
+            fill = input$demographics)  + 
+       theme_void()
+     
+   },
+   
+   height = 580
+   )
 }
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
