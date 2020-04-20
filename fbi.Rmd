@@ -23,6 +23,7 @@ FBI <- read_csv("FBI Top Ten Most Wanted_Fixed - Sheet1.csv") %>%
   mutate_if(is.numeric, funs(replace_na(., 0)))
 
 file.copy("FBI Top Ten Most Wanted_Fixed - Sheet1.csv", "final_project")
+file.copy("FBI Top Ten Most Wanted_Fixed - Sheet1.csv", "piechart")
 ```
 
 ```{r crime_data, echo = FALSE}
@@ -50,16 +51,26 @@ crime
 
 ```{r crime_year, echo = FALSE}
 pie_chart <- FBI %>% 
-filter(! race == 0) %>% 
-       group_by(race) %>% 
+filter(! gender == 0) %>% 
+       group_by(gender) %>% 
        count()  %>% 
        mutate(prop = (n)/(sum(n))) 
 
 pie_chart %>% 
-ggplot(aes(x = "", y = n, fill = race))+
+ggplot(aes(x = "", y = n, fill = gender))+
        geom_bar(width = 1, stat = "identity") +
        coord_polar("y", start=0) + 
        theme_void() 
 ```
-
+labs(title = paste("Breakdown of Criminals by ", new_title, sep = ""),
+            fill = input$demographics)  +
+            
+            
+             new_title <- if(input$demographics == "race"){
+       print("Race")
+     } else if(input$demographics == "nationality"){
+       print("Nationality")
+     } else if(input$demographics == "gender"){
+       print("Gender")
+     } 
 

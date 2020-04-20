@@ -9,6 +9,7 @@
 
 library(shiny)
 library(shinythemes)
+library(ggplot2)
 
 FBI <- read_csv("FBI Top Ten Most Wanted_Fixed - Sheet1.csv") %>% 
   clean_names() 
@@ -46,24 +47,39 @@ ui <- navbarPage(theme = shinytheme("sandstone"),
                                  p("There are no current existing databases aggregating information on members of the 
                                    FBI's Most Wanted List. Data scrubbing was conducted by myself using information from
                                    the FBI's archived most wanted lists. These lists contained information on dates of placement, 
-                                   dates of removal, and biographical information such as race, gender, and nationality). For a significant 
+                                   dates of removal, and biographical information such as race, gender, and nationality. For a significant 
                                    number of past criminals, the nature of crimes/profiles were not available through the FBI. To determine 
                                    the reasons for placement (including suspected charges
                                    and convicted charges, if apprehended), archived court files were utilized. Given the fact that
                                    many of the criminals had lengthy criminal records, only the two most significant charges were considered
                                    for each criminal."))),
-                 tabPanel("The Crimes", 
+                 tabPanel("The Crimes",
+                 column(7,
                  h1("What crimes end up on the list?"),
                         p("The following chart lists the occurance of crimes on the FBI's Most Wanted Lists 
-                          for the years 2000-2020."),
-                 mainPanel(plotOutput("crime_breakdown"))),
+                          for the years 2000-2020.")),
+                 column(12,
+                 mainPanel(plotOutput("crime_breakdown")))),
                  tabPanel("The Criminals",
-                 selectInput("demographics", tags$b("Choose a demographic characteristic:"),
+                 column(4,
+                 h1("Demographics of Criminals"),
+                          p("To view the demographics of the criminals placed on the FBI's Most Wanted List from
+                            the years 2000 to 2020, please select a demographic characteristic."),
+                 h2("Race Findings"),
+                 p("The majority of offenders are identified as white."),
+                 h2("Gender Findings"),
+                 p("The vast majority of offenders on the list are male."),
+                 h2("Nationality Findings"),
+                 p("Most offenders are American citizens.")),
+                 column(7,
+                 sidebarPanel(
+                 selectInput("demographics", "Choose a demographic characteristic:",
                              choices = c("Race" = "race", 
                                          "Gender" = "gender",
-                                         "Nationality" = "nationality")),
+                                         "Nationality" = "nationality"),
+                             selected = "race")),
                  mainPanel(
-                   plotOutput("distPlot"))),
+                   plotOutput("distPlot")))),
                  tabPanel("Efficacy of FBI's List from 2000-2020"),
                  tabPanel("Gang Related Crimes"),
                  tabPanel("Notable Cases"),
@@ -110,33 +126,31 @@ server <- function(input, output, session) {
      })
    
    output$distPlot <- renderPlot({
-     new_title <- if(input$demographics == "race"){
-       print("Race")
-     } else if(input$demographics == "nationality"){
-       print("Nationality")
-     } else if(input$demographics == "gender"){
-       print("Gender")
-     } 
      
      pie_chart <- FBI %>% 
-       filter(! input$demographics == 0) %>% 
-       group_by(input$demographics) %>% 
+       filter(! (.data[[input$demographics]] == 0)) %>% 
+       group_by(.data[[input$demographics]]) %>% 
        count() %>% 
        mutate(prop = (n)/(sum(n))) 
      
      pie_chart %>% 
-       ggplot(aes(x = "", y = n, fill = input$demographics)) +
-       geom_bar(stat = "identity") +
+       ggplot(aes(x = "", y = n, fill = .data[[input$demographics]])) +
+       geom_bar(width = 1, stat = "identity") +
        coord_polar("y", start = 0) + 
-       labs(title = paste("Breakdown of Criminals by ", new_title, sep = ""),
-            fill = input$demographics)  + 
-       theme_void()
-     
-   },
-   
-   height = 580
-   )
+       scale_fill_brewer(palette = "Spectral") +
+       theme_dark() +
+       theme(axis.text = element_blank(),
+             axis.ticks = element_blank(),
+             panel.grid  = element_blank()) +
+       labs(
+         x = NULL,
+         y = NULL, 
+         fill = NULL
+       )
+   })
 }
+     
+   
 
 
 # Run the application 
